@@ -33,7 +33,7 @@ pipeline {
                     APP_VER = aiVerGenerate()
 
                     docker.withRegistry("${env.ALIYUN_DOCKER_REGISTRY_URL}", "${env.ALIYUN_DOCKER_REGISTRY_ACCOUNT}") {
-                        def imageTag = "registry-vpc.cn-hangzhou.aliyuncs.com/midea-aiplatform/speech-test:${ver}"
+                        def imageTag = "registry-vpc.cn-hangzhou.aliyuncs.com/midea-aiplatform/speech-test:${APP_VER}"
                         def image = docker.build("${imageTag}")
                         image.push()
                         sh "docker rmi -f ${imageTag}"
