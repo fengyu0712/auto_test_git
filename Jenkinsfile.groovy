@@ -7,22 +7,32 @@ pipeline {
         gitlab(triggerOnPush: true, triggerOnMergeRequest: true, branchFilterType: 'All', secretToken: "246188d61ddf8a33355c4100a425187b")
     }
     environment{
-        ver = ""
     }
     options {
         gitLabConnection('mideagitlab')
     }
 
     stages {
+        stage("init pipeline"){
+            steps{
+                script{
+                    // 初始化流水线全局变量，必须
+                    aiInitGlobalEnv()
+
+                    // 打印环境变量
+                    sh "printenv"
+                }
+            }
+        }
         stage('build') {
             when {
                 expression {
-                    return "PUSH" == env.gitlabActionType
+                    return env.gitlabSourceBranch == "master" && env.gitlabActionType == "PUSH"
                 }
             }
             steps {
                 script {
-                    ver = aiVerGenerate()
+                    APP_VER = aiVerGenerate()
 
                     docker.withRegistry("${env.ALIYUN_DOCKER_REGISTRY_URL}", "${env.ALIYUN_DOCKER_REGISTRY_ACCOUNT}") {
                         def imageTag = "registry-vpc.cn-hangzhou.aliyuncs.com/midea-aiplatform/speech-test:${ver}"
@@ -30,11 +40,9 @@ pipeline {
                         image.push()
                         sh "docker rmi -f ${imageTag}"
                     }
-                }
-            }
-            post {
-                always {
-                    cleanWs()
+
+                    // 打包chart
+//                    aiChartPackage("charts","${APP_VER}")
                 }
             }
         }
@@ -46,14 +54,17 @@ pipeline {
         success {
             updateGitlabCommitStatus name: 'build', state: 'success'
             script{
-                currentBuild.displayName = "${ver}"
+                currentBuild.displayName = "${APP_VER}"
+            }
+        }
+        always{
+            script{
+                cleanWs()
                 if(env.gitlabSourceRepoHomepage != null){
                     currentBuild.description = "trigger by <a  target='_blank' rel='noopener noreferrer' href='${env.gitlabSourceRepoHomepage}/commit/${env.gitlabAfter}'>${env.gitlabSourceNamespace}/${env.gitlabSourceRepoName}</a>,${env.gitlabUserName}"
                 }
+
             }
-        }
-        always {
-            cleanWs()
         }
     }
 }
