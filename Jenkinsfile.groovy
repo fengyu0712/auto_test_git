@@ -6,8 +6,6 @@ pipeline {
     triggers {
         gitlab(triggerOnPush: true, triggerOnMergeRequest: true, branchFilterType: 'All', secretToken: "246188d61ddf8a33355c4100a425187b")
     }
-    environment{
-    }
     options {
         gitLabConnection('mideagitlab')
     }
