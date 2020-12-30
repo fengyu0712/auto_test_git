@@ -5,4 +5,5 @@ WORKDIR /usr/src/app
 
 COPY . .
 
-RUN pip install --no-cache-dir -r requirements.txt --proxy='http://aicloud-privoxy.midea.com'
+# log,result,report 路径必须存在
+RUN pip install --no-cache-dir -r requirements.txt --proxy='http://aicloud-privoxy.midea.com' && mkdir -p ./log && mkdir -p ./result && mkdir -p ./report
