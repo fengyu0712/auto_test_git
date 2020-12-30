@@ -1,8 +1,8 @@
 # 本地跑测试用
 version: "3"
 services:
-  springboot-easy:
-    command: sh -c "pytest"
+  speech-test:
+    command: pytest
     container_name: speech-test
     build:
       context: .
