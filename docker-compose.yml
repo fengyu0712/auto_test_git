@@ -2,7 +2,6 @@
 version: "3"
 services:
   speech-test:
-    command: pytest
     container_name: speech-test
     build:
       context: .
