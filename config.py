@@ -25,12 +25,13 @@ device_status_list = {"dit": "http://sit.aimidea.cn:11003/v1/common/device/getDe
 
 # 3、 excel数据对应的列
 cell_config = {
-    "case_id": 1,
-    "case_name": 2,
-    "step": 3,
-    "params": 4,
-    "result": 5,
-    "desc": 6
+    "case_catory": 1,
+    "case_id": 2,
+    "case_name": 3,
+    "step": 4,
+    "params": 5,
+    "result": 6,
+    "desc": 7
 }
 
 # 4、终端入口设备信息

@@ -1,5 +1,5 @@
 # coding: utf-8
-from scripts.conftest import http_host
+from scripts.init_env import http_host
 import os
 import requests
 from tools.get_log import GetLog

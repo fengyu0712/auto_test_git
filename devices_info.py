@@ -1,7 +1,7 @@
 # coding: utf-8
 # 328
 import uuid
-from scripts.conftest import terminal_devices
+from scripts.init_env import terminal_devices
 class Deviceset():
     def __init__(self,terminal_type):
         self.devicetype=terminal_type   #  设备类型
