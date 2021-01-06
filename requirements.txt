@@ -4,5 +4,4 @@ websocket-client==0.57.0
 allure-pytest==2.8.19
 requests==2.22.0
 jsonpath==0.82
-numpy==1.17.2
 pandas==0.25.1
