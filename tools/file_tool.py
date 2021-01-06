@@ -22,8 +22,15 @@ class FileTool:
         self.load_excel()  # 加载用例
 
     def csv_to_xlsx_pd(self):
-        csv = pd.read_csv(self.old_filename, encoding='utf-8')
-        csv.to_excel(self.filename, sheet_name='data',index=0)
+        workbook = openpyxl.Workbook()
+        listinfo = self.read_csv()
+        worksheet = workbook.create_sheet("data",index=0)
+        for i in listinfo:
+            worksheet.append(i)
+
+        workbook.save(self.filename)
+        #csv = pd.read_csv(self.old_filename, encoding='utf-8')
+        #csv.to_excel(self.filename, sheet_name='data',index=0)
 
     # 备份excel文件
     def load_excel(self):
@@ -36,44 +43,19 @@ class FileTool:
         # 3、获取所有的表单对象
         self.sheets = self.workbook.sheetnames
         # 4、获取当前表的表单对象
-        self.sheet = self.workbook[self.sheets[0]]
+        self.sheet = self.workbook["data"]
 
     def read_csv(self):
-        wholedictinfo = list()
         try:
-            log.info("读取用例文件........")
-            allsteps = []
-            dictinfo = []
-            with open(r"D:\project\auto_test\data\data_case.csv",encoding="utf-8") as f:
+            log.info("读取csv用例文件........")
+            csvpath=base_path+os.sep+"data"+os.sep+"data_case.csv"
+            with open(csvpath, encoding="utf-8") as f:
                 reader = csv.reader(f)
-                readerlist=list(reader)
-            row=0
-            for i in readerlist:
-                row=row+1
-                if row==1:
-                    continue
-                caseid =i[cell_config.get("case_id")]  # 用例编号信息
-                casetitle = i[cell_config.get("case_name")]  # 用例名称信息
-                if caseid.strip()!= "":
-                    allsteps = []
-                    dictinfo = {"case_id": caseid, "case_name": casetitle, "case_catory": "", "steps": []}
-                    wholedictinfo.append(dictinfo)
-                linesinfo = dict()
-                params_value =i[cell_config.get("params")]  # 参数信息
-                if params_value.strip() == "":
-                    continue
-                linesinfo["step"] = i[cell_config.get("step")]
-                linesinfo["params"] = params_value
-                linesinfo["x_y"] = [row, cell_config.get("result")]
-                linesinfo["x_y_desc"] = [row, cell_config.get("desc")]
-                allsteps.append(linesinfo)
-                if "steps" in dictinfo:
-                    dictinfo["steps"] = allsteps
-            return wholedictinfo
+                readerlist = list(reader)
+            return readerlist
         except Exception as e:
-            print("异常信息如下：",e)
-            return wholedictinfo
-
+            print("读取csv异常信息如下：", e)
+            return list()
 
     def write_csv(self,row):
         with open(self.filename, 'w', newline='') as f:
