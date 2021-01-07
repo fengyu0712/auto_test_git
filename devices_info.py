@@ -64,6 +64,7 @@ class Deviceset():
 
 
     def __addcontent(self):
+        content_data=""
         if self.devicetype=="328" :
             content_data = {
                 "version": "3.0",
@@ -142,9 +143,28 @@ class Deviceset():
                     }
                 }
             }
+        elif self.devicetype=="xf":
+            content_data= {
+                "topic": "cloud.speech.trans",
+                "mid": uuid.uuid1().hex,
+                "version": "1.0",
+                "request": {
+                    "timestamp": 1234567890,
+                    "sessionId": "%s" % uuid.uuid1().hex,
+                    "recordId": "%s" % uuid.uuid1().hex,
+                },
+                "params": {
+                    "audio": {
+                        "audioType": "wav",
+                        "sampleRate": 16000,
+                        "channel": 1,
+                        "sampleBytes": 2
+                    },
+                    "fullDuplex":False,
+                    "asrIsp":"xf-aiui",
+                    "accent":"mandarin",
+                }
+            }
 
-        self.headers.append(content_data)
-
-
-
-
+        if content_data!="":
+            self.headers.append(content_data)

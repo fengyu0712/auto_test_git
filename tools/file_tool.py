@@ -6,6 +6,7 @@ from tools.get_log import GetLog
 import datetime
 from scripts.init_env import current_env
 import csv
+import pandas as pd
 
 log=GetLog.get_logger()  # 初始化日志对象
 
@@ -16,15 +17,15 @@ class FileTool:
         self.old_filename = base_path + os.sep + "data" + os.sep + filename  # 用例文件目录
         nowtimeinfo = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         self.filename=base_path+os.sep+"result"+os.sep+current_env+"_"+device_type+"_"+nowtimeinfo+filename.replace(".csv",".xlsx") # 保存的文件名称
-        #self.back_excel()  # 备份用例
         self.csv_to_xlsx_pd()
         self.load_excel()  # 加载用例
 
     def csv_to_xlsx_pd(self):
-        workbook = openpyxl.Workbook()
-        listinfo = self.read_csv()
-        worksheet = workbook.create_sheet("data",index=0)
+        workbook=openpyxl.Workbook()
+        listinfo=self.read_csv()
+        worksheet=workbook.create_sheet("data",index=0)
         for i in listinfo:
+            print(i)
             worksheet.append(i)
 
         workbook.save(self.filename)
@@ -46,15 +47,15 @@ class FileTool:
 
     def read_csv(self):
         try:
-            log.info("读取csv用例文件........")
-            csvpath=base_path+os.sep+"data"+os.sep+"data_case.csv"
+            csvpath = base_path + os.sep + "data" + os.sep + "data_case.csv"
             with open(csvpath, encoding="utf-8") as f:
                 reader = csv.reader(f)
-                readerlist = list(reader)
-            return readerlist
+                readerlist=list(reader)
+            return  readerlist
         except Exception as e:
-            print("读取csv异常信息如下：", e)
+            print("读取csv异常信息如下：",e)
             return list()
+
 
     def write_csv(self,row):
         with open(self.filename, 'w', newline='') as f:
@@ -69,14 +70,17 @@ class FileTool:
             allsteps = []
             dictinfo = []
             worksheet= self.sheet
-            #print( worksheet.max_row)
+            case_catory=""
             for i in range(2, worksheet.max_row + 1):
                 caseid = worksheet.cell(row=i, column=cell_config.get("case_id")).value  # 用例编号信息
-                #print(caseid)
                 casetitle = worksheet.cell(row=i, column=cell_config.get("case_name")).value  # 用例名称信息
+                temp_case_catory=worksheet.cell(row=i, column=cell_config.get("case_catory")).value
+                if temp_case_catory!=None:
+                    case_catory=temp_case_catory
+
                 if caseid != None:
                     allsteps = []
-                    case_catory=worksheet.cell(row=i, column=cell_config.get("case_catory")).value
+
                     dictinfo = {"case_id": caseid, "case_name": casetitle, "case_catory": case_catory, "steps": []}
                     wholedictinfo.append(dictinfo)
                 linesinfo = dict()
