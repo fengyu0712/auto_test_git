@@ -6,7 +6,6 @@ from tools.get_log import GetLog
 import datetime
 from scripts.init_env import current_env
 import csv
-import pandas as pd
 
 log=GetLog.get_logger()  # 初始化日志对象
 
