@@ -54,3 +54,6 @@ uat_terminal_devices = {
                        "deviceId": "166026256064412"},
     "yuyintie_1": {"sn": "000008311000VA022091500000289FGR", "clientid": "yuyintie_test", "deviceId": "9895604650248"},
     }
+
+alltotal_devices = {"dit": dit_terminal_devices, "sit": dit_terminal_devices, "uat": uat_terminal_devices,
+                    "pro": uat_terminal_devices}
