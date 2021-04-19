@@ -1,123 +1,111 @@
-# coding: utf-8
-from config import base_path,cell_config
+import xlwt
+from config import base_path
 import os
-import openpyxl
-from tools.get_log import GetLog
+from tools.mylog import Logger
 import datetime
 from scripts.init_env import current_env
 import csv
+import config
 
-log=GetLog.get_logger()  # 初始化日志对象
-
-class FileTool:
-    # 初始化
-    def __init__(self,filename,device_type):
-        # 组装动态文件路径
-        self.old_filename = base_path + os.sep + "data" + os.sep + filename  # 用例文件目录
-        nowtimeinfo = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-        self.filename=base_path+os.sep+"result"+os.sep+current_env+"_"+device_type+"_"+nowtimeinfo+filename.replace(".csv",".xlsx") # 保存的文件名称
-        self.csv_to_xlsx_pd()
-        self.load_excel()  # 加载用例
-
-    def csv_to_xlsx_pd(self):
-        workbook=openpyxl.Workbook()
-        listinfo=self.read_csv()
-        worksheet=workbook.create_sheet("data",index=0)
-        for i in listinfo:
-            print(i)
-            worksheet.append(i)
-
-        workbook.save(self.filename)
-        #csv = pd.read_csv(self.old_filename, encoding='utf-8')
-        #csv.to_excel(self.filename, sheet_name='data',index=0)
-
-    # 备份excel文件
-    def load_excel(self):
-        # 打开文件，获取workbook对象
-        #oldworkbook = openpyxl.load_workbook(self.old_filename)
-        #oldworkbook.save(self.filename)
-        #oldworkbook.close()
-        self.workbook=openpyxl.load_workbook(self.filename)
-
-        # 3、获取所有的表单对象
-        self.sheets = self.workbook.sheetnames
-        # 4、获取当前表的表单对象
-        self.sheet = self.workbook["data"]
-
-    def read_csv(self):
-        try:
-            csvpath = base_path + os.sep + "data" + os.sep + "data_case.csv"
-            with open(csvpath, encoding="utf-8") as f:
-                reader = csv.reader(f)
-                readerlist=list(reader)
-            return  readerlist
-        except Exception as e:
-            print("读取csv异常信息如下：",e)
-            return list()
+log = Logger()  # 初始化日志对象
 
 
-    def write_csv(self,row):
-        with open(self.filename, 'w', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow(row)
+class FileTool():
 
-    # 读取excel文件
-    def read_excel(self):
-        wholedictinfo = list()
-        try:
-            log.info("读取用例文件........")
-            allsteps = []
-            dictinfo = []
-            worksheet= self.sheet
-            case_catory=""
-            for i in range(2, worksheet.max_row + 1):
-                caseid = worksheet.cell(row=i, column=cell_config.get("case_id")).value  # 用例编号信息
-                casetitle = worksheet.cell(row=i, column=cell_config.get("case_name")).value  # 用例名称信息
-                temp_case_catory=worksheet.cell(row=i, column=cell_config.get("case_catory")).value
-                if temp_case_catory!=None:
-                    case_catory=temp_case_catory
+    def read_csv(self, file_path):
+        data = []
+        with open(file_path, encoding='utf-8') as f:
+            reader = csv.reader(f)
+            header = next(reader)
+            # print(header)
+            for row in reader:
+                data.append(row)
+        return data
 
-                if caseid != None:
-                    allsteps = []
+    def dict_info(self, data, devicetype=None, isindex=False, remote_device=None):
+        # 不穿devicetype 时，取最后一个值，方便归类
+        data_list = list()
+        dictinfo = []
+        allsteps = list()
+        line = 0
+        for i in range(len(data)):
+            caseid = data[i][1]
+            if caseid:
+                if devicetype == None: devicetype = data[i][-2]
+                dictinfo = {"case_category": data[i][0], "case_id": caseid, "case_name": data[i][2],
+                            "lock_device": data[i][3], "is_wait": data[i][4], "steps": [], "devicetype": devicetype,
+                            "remote_device": remote_device}
+                dictinfo["devicetype"] = devicetype
+                if data[i][0] in config.test_category:  # 筛选用例
+                    data_list.append(dictinfo)
+                    line += len(allsteps)
+                    if isindex == True:
+                        dictinfo["index"] = line + 1
+                allsteps = list()
+            step_dict = dict()
+            if data[i][6] == None:
+                continue
+            step_dict["step"] = data[i][5]
+            step_dict["params"] = data[i][6]
+            step_dict["response"] = data[i][7]
+            step_dict["result"] = data[i][8]
+            allsteps.append(step_dict)
+            if "steps" in dictinfo:
+                dictinfo["steps"] = allsteps
+        return data_list
 
-                    dictinfo = {"case_id": caseid, "case_name": casetitle, "case_catory": case_catory, "steps": []}
-                    wholedictinfo.append(dictinfo)
-                linesinfo = dict()
-                params_value=worksheet.cell(row=i, column=cell_config.get("params")).value
-                if params_value==None:
-                    continue
-                linesinfo["step"] = worksheet.cell(row=i, column=cell_config.get("step")).value
-                linesinfo["params"] =params_value
-                linesinfo["x_y"] = [i,cell_config.get("result")]
-                linesinfo["x_y_desc"] = [i, cell_config.get("desc")]
-                allsteps.append(linesinfo)
-                if "steps" in dictinfo:
-                    dictinfo["steps"] = allsteps
-            log.info("读取用例文件完成........")
-            return wholedictinfo
-        except Exception as e:
-            log.info("读取用例文件异常,异常信息为:{}".format(e))
-            return wholedictinfo
+    def dict_data_to_list(self, datainfo, add_devicetype=None):
+        data_list = list()
+        for case in datainfo:
+            for i in range(len(case["steps"])):
+                if i == 0:
+                    one_data = [case["case_category"], case["case_id"], case["case_name"], case["lock_device"],
+                                case["is_wait"]]
+                else:
+                    one_data = ["", "", "", "", ""]
+                for value in list(case["steps"][i].values()):
+                    one_data.append(value)
+                if add_devicetype: one_data.append(case["devicetype"])
+                data_list.append(one_data)
+        return data_list
+
+    def creat_ecxel(self):
+        self.wb = xlwt.Workbook()
+
+    def write_data(self, sheet_name, list_data):
+        sheet = self.wb.add_sheet(sheet_name)
+        header = ['用例分类', '用例编号', '用例名称', '锁定设备', 'is_wait', '测试步骤', '参数', '执行状态', '实际结果']
+        for i in range(len(header)):
+            sheet.write(0, i, header[i])
+        for i in range(len(list_data)):
+            for j in range(len(list_data[i])):
+                sheet.write(i + 1, j, str(list_data[i][j]))
+
+    def save_excel(self, path=None):
+        nowdate = datetime.datetime.now().strftime('%Y-%m-%d-%H-%H-%S')
+        if path == None:
+            path = os.path.join(os.path.join(base_path, "result"), f"{current_env}_TestResult_{nowdate}.xls")
+        self.wb.save(path)
 
 
-    # 写入exel文件
-    # x_y 是一个列表
-    def write_excel(self,sheet_name,x_y,msg):
-        # x_y 参数的格式为列表，如[2,5]
-        #self.sheet = self.workbook[sheet_name]
-        try:
-            self.sheet.cell(x_y[0], x_y[1]).value = msg
-        except Exception as e:
-            self.sheet.cell(x_y[0], x_y[1]).value = e
-        finally:
-            # 保存excel
-            self.workbook.save(self.filename)
+def devicetype_info(data):
+    # 按照devicetype 分割数据，方便写入不同表单
+    test_info = {}
+    for key in config.main_device_list:
+        test_info[key] = []
+
+    # for case in data:
+    #     devicetype = case["devicetype"]
+    #     test_info[devicetype].append(case)
+
+    return test_info
 
 
 if __name__ == '__main__':
-    f=FileTool("data_case.csv","328")
-    d=f.read_excel()
-    print(d)
-    #f.write_excel("空调本机控制",[3,11],"数据写入成功")
-    #f.write_excel("空调本机控制", [4, 11], "数据写入成功22222")
-    #f.write_excel("跨机控制", [4, 11], "333333")
+    a = r"F:\git\Midea\auto_test\data\data_case.csv"
+    b = r"F:\git\Midea\auto_test\data\open_api_case.csv"
+    f = FileTool()
+    data = f.read_csv(b)
+    print(data)
+    # data_list = f.dict_info(data, devicetype="3308", isindex=True)
+    # print(data_list)
