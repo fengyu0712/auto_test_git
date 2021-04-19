@@ -15,7 +15,10 @@ COPY . .
 # upgrade pip
 RUN pip --no-cache-dir install -i http://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com --upgrade pip && rm -rf /var/lib/apt/lists/*
 
+# install python components
+RUN pip install --user -i https://mirrors.aliyun.com/pypi/simple/ --no-cache-dir -r requirements.txt
+
 # log,result,report 路径必须存在
-RUN pip install --user -i https://mirrors.aliyun.com/pypi/simple/ --no-cache-dir -r requirements.txt && mkdir -p ./log && mkdir -p ./result && mkdir -p ./report
+RUN mkdir -p ./log && mkdir -p ./result && mkdir -p ./report
 
 ENTRYPOINT ["pytest"]
