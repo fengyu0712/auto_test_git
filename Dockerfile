@@ -1,5 +1,5 @@
 # 自动化测试python脚本镜像
-FROM python:3.7.3
+FROM python:3.7.3-alpine
 
 # 更新Alpine的软件源为阿里云，因为从默认官源拉取实在太慢了
 RUN echo https://mirrors.aliyun.com/alpine/v3.10/main/ > /etc/apk/repositories && \
