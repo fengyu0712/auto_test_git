@@ -26,7 +26,7 @@ import config
 base_path = config.base_path
 # from scripts.init_env import host, current_env
 
-allure_result = os.path.join(os.path.join(base_path, "result"), "allure_result")
+allure_result = os.path.join(base_path, "report")
 allure_conf_path = os.path.join(allure_result, "environment.properties")
 
 
