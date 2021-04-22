@@ -25,6 +25,10 @@ else:
 host=host_address_list[current_env]
 # 3、http请求的主机地址,获取设备的状态
 http_host=device_status_list[current_env]
+if current_env=="uat":
+    device_serarch_host=device_status_list["sit"]
+else:
+    device_serarch_host = device_status_list[current_env]
 # 终端设备信息
 terminal_devices=alltotal_devices[current_env]
 #音箱地址
