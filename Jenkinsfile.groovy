@@ -5,6 +5,8 @@ pipeline {
     agent { label "docker" }
     triggers {
         gitlab(triggerOnPush: true, triggerOnMergeRequest: true, branchFilterType: 'All', secretToken: "246188d61ddf8a33355c4100a425187b")
+        //分钟，小时，日，月，周
+        cron('0 2 * * *')  //表示每天凌晨2点执行一次
     }
     options {
         gitLabConnection('mideagitlab')
