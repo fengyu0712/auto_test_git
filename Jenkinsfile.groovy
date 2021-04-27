@@ -1,5 +1,6 @@
 @Library('aicloud-pipeline-share-lib') _
 import cn.aimidea.cd.pipeline.lib.*
+String APP_VER = ""
 
 pipeline {
     agent { label "docker" }
@@ -18,21 +19,20 @@ pipeline {
                 script{
                     // 初始化流水线全局变量，必须
                     aiInitGlobalEnv()
-
+                    APP_VER = aiVerGenerate()
                     // 打印环境变量
                     sh "printenv"
                 }
             }
         }
         stage('build') {
-            when {
-                expression {
-                    return env.gitlabSourceBranch == "master" && env.gitlabActionType == "PUSH"
-                }
-            }
+//            when {
+//                expression {
+//                    return env.gitlabSourceBranch == "master" && env.gitlabActionType == "PUSH"
+//                }
+//            }
             steps {
                 script {
-                    APP_VER = aiVerGenerate()
 
                     docker.withRegistry("${env.ALIYUN_DOCKER_REGISTRY_URL}", "${env.ALIYUN_DOCKER_REGISTRY_ACCOUNT}") {
                         def imageTag = "registry-vpc.cn-hangzhou.aliyuncs.com/midea-aiplatform/speech-test:${APP_VER}"
