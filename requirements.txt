@@ -1,8 +1,8 @@
 allure-pytest==2.8.19
 allure-python-commons==2.8.19
 ddt==1.4.1
-gevent==20.9.0
-geventhttpclient==1.4.4
+gevent
+geventhttpclient
 greenlet==0.4.17
 jsonpath==0.82
 lockfile==0.12.2
