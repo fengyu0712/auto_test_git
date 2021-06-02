@@ -9,8 +9,6 @@ import random
 import queue
 import allure
 import jsonpath
-from apscheduler.schedulers.blocking import BlockingScheduler
-
 from api.meiju_api import Meijuapi
 from scripts import common_assert
 from api.webscoket_api import AiCloud

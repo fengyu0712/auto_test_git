@@ -1,7 +1,6 @@
 # coding: utf-8
 from datetime import datetime
 
-from apscheduler.schedulers.blocking import BlockingScheduler
 from jsonpath import jsonpath
 from websocket import ABNF
 import websocket, time, json, gc
@@ -221,66 +220,3 @@ if __name__ == '__main__':
     aiyuncloud.on_line()
     # aiyuncloud.send_data('打开自然对话')
     aiyuncloud.send_data('我有哪些智能设备')
-    # aiyuncloud = AiCloud("328_halfDuplex")
-    # aiyuncloud.on_line()
-    # aiyuncloud.send_data('今天几号')
-    # aiyuncloud.send_data('晚上八点')
-    # aiyuncloud.send_data('明天呢')
-    # time.sleep(5)
-    # n = 1
-    # while True:
-    #     print(n)
-    #     aiyuncloud.send_data('顺序播放')
-    #     n += 1
-    #     time.sleep(3)
-    # def job():
-    #     aiyuncloud = AiCloud("328_halfDuplex")
-    #     aiyuncloud.on_line()
-    #     aiyuncloud.send_data('帮我订一个零点的二十的闹钟')
-    # scheduler = BlockingScheduler()
-    # scheduler.add_job(job, 'date', run_date='2021-05-18 0:25:00')
-    # scheduler.start()
-    # while True:
-    #     now = datetime.now()
-    #     if now.hour == 0 and now.minute>20:
-    #         aiyuncloud = AiCloud("328_halfDuplex")
-    #         aiyuncloud.on_line()
-    #         aiyuncloud.send_data('帮我订一个零点的二十的闹钟')
-    #         break
-    #     else:
-    #         print(now.minute)
-    #         print(now)
-    #         time.sleep(300)
-    # n = 1
-    # while True:
-    #     print(n)
-    #     aiyuncloud.send_data('关闭净化器')
-    #     aiyuncloud.send_data('明天的天气')
-    #     n += 1
-    # result = aiyuncloud.send_data('打开卧室空调')
-    # # b = jsonpath(result, "$..url")[1]
-    # b = jsonpath(result, "$..order")
-
-    # result = aiyuncloud.send_data('继续播放')
-
-    # print(result)
-
-    # result = aiyuncloud.send_data('帮我定个一分钟以后的闹钟')
-
-    # print(result)
-    # result = aiyuncloud.send_data('当前音量是多少')
-    # print(result)
-    # result = aiyuncloud.send_data('音量设为百分之六十五')
-    # print(result)
-    # result = aiyuncloud.send_data('来一首歌')
-    # # print(result)
-    #
-    # # print(result)
-    # result = aiyuncloud.send_data('继续播放')
-    # # print(result)
-    # # print(result)
-    # result = aiyuncloud.send_data('暂停播放', )
-    # # # print(result)
-    # result = aiyuncloud.send_data('停止播放')
-    # # # print(result)
-    # result = aiyuncloud.send_data('继续播放')

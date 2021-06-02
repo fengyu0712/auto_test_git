@@ -14,7 +14,7 @@ class FileTool():
 
     def read_csv(self, file_path):
         data = []
-        with open(file_path, encoding='gbk') as f:
+        with open(file_path, encoding='utf-8') as f:
             reader = csv.reader(f)
             header = next(reader)
             # print(header)
