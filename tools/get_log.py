@@ -34,8 +34,8 @@ class GetLog(logging.Logger):
           # 将格式器添加到处理器中
           th.setFormatter(fm)
           # 将日志器添加到日志器中
-          #addHandler(th)
-          #self.addHandler(sh)
+          # addHandler(th)
+          # self.addHandler(sh)
       # 返回日志器
       return cls.__logger
 

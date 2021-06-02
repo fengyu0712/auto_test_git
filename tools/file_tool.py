@@ -14,12 +14,13 @@ class FileTool():
 
     def read_csv(self, file_path):
         data = []
-        with open(file_path, encoding='utf-8') as f:
+        with open(file_path, encoding='gbk') as f:
             reader = csv.reader(f)
             header = next(reader)
             # print(header)
             for row in reader:
                 data.append(row)
+        print(data)
         return data
 
     def dict_info(self, data, devicetype=None, isindex=False, remote_device=None):

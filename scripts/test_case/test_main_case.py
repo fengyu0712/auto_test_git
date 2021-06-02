@@ -1,12 +1,9 @@
 import datetime
-import re
-
 import allure
 import pytest
 import config
 import os
-from api import Traversing_path
-from tools.file_tool_1 import MyXlrs
+
 from tools.file_tool import FileTool
 from tools.mylog import Logger
 from scripts import common_function
@@ -28,11 +25,11 @@ w = r.copy_book()
 def get_all_caseinfo():
     sheet_names = r.get_sheet_names()
     all_caseinfo = list()
-    for devicetype in sheet_names:
-        data = r.read_data(start_line=2, sheetname=devicetype, is_addsheetname=True)
-        dict_data = FileTool().dict_info(data, devicetype=devicetype, isindex=True)
-        all_caseinfo += dict_data
-    print(all_caseinfo)
+    for sheet in sheet_names:
+        if sheet in main_device_list:
+            data = r.read_data(start_line=2, sheetname=sheet, is_addsheetname=True)
+            dict_data = FileTool().dict_info(data, devicetype=sheet, isindex=True)
+            all_caseinfo += dict_data
     return all_caseinfo
 
 
@@ -40,9 +37,11 @@ all_caseinfo = get_all_caseinfo()
 
 
 class TestMain:
-    def setup_class(self):
+    @classmethod
+    def setup_class(cls):
         log.info("========%s开始执行主场景用例测试用例:========" % __class__.__name__)
 
+    @classmethod
     def teardown_class(cls):
         Logger().info("========%s执行主场景用例测试用例结束!========" % __class__.__name__)
 

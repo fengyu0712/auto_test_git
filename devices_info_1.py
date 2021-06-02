@@ -1,15 +1,17 @@
 # coding: utf-8
 # 328
-import re
 import time
 import uuid
 from scripts.init_env import terminal_devices
 
 
-class Deviceset():
-    def __init__(self, terminal_type):
+class Deviceset:
+    def __init__(self, terminal_type, device_info=None):
         self.devicetype = terminal_type  # 设备类型
-        self.device_info = terminal_devices.get(terminal_type)  # 获取设备信息
+        if device_info == None:
+            self.device_info = terminal_devices.get(terminal_type)  # 获取设备信息
+        else:
+            self.device_info = device_info
         if not self.device_info:
             self.device_info = terminal_devices.get("328_halfDuplex")
         self.sn = self.device_info["sn"]  # sn信息
@@ -21,21 +23,21 @@ class Deviceset():
         else:
             self.version = "3.0"
 
-    def get_time_stamp(self):
-        ct = time.time()
-        local_time = time.localtime(ct)
-        data_head = time.strftime("%Y-%m-%d %H:%M:%S", local_time)
-        data_secs = (ct - int(ct)) * 1000
-        time_stamp = "%s.%03d" % (data_head, data_secs)
-        return time_stamp
+    # def get_time_stamp(self):
+    #     ct = time.time()
+    #     local_time = time.localtime(ct)
+    #     data_head = time.strftime("%Y-%m-%d %H:%M:%S", local_time)
+    #     data_secs = (ct - int(ct)) * 1000
+    #     time_stamp = "%s.%03d" % (data_head, data_secs)
+    #     return time_stamp
 
     def ota_check(self):
         ota_check_data = {
             "topic": "cloud.ota.check",
-            "mid": f"{uuid.uuid1().hex}",
+            "mid": str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time()) + "mid")),
             "version": self.version,
             "request": {
-                "timestamp": f"{self.get_time_stamp()}"
+                "timestamp": int(time.time())
             },
             "params": {
                 "sn": f"{self.sn}",
@@ -66,13 +68,13 @@ class Deviceset():
         status_data = {
             "version": self.version,
             "topic": "cloud.report.status",
-            "mid": "%s" % uuid.uuid1().hex,
+            "mid": str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time()) + "mid")),
             "category": "AC",
             "id": f"{self.deviceId}",
             "clientId": "%s" % self.clientid,
             "sn": f"{self.sn}",
             "request": {
-                "timestamp": self.get_time_stamp()
+                "timestamp": int(time.time())
             },
             "params": {
                 "status": [{
@@ -94,13 +96,13 @@ class Deviceset():
         play_status = {
             "version": self.version,
             "topic": "cloud.report.status",
-            "mid": "%s" % uuid.uuid1().hex,
+            "mid": str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time()) + "mid")),
             "category": "AC",
             "id": f"{self.deviceId}",
             "clientId": "%s" % self.clientid,
             "sn": f"{self.sn}",
             "request": {
-                "timestamp": self.get_time_stamp()
+                "timestamp": int(time.time())
             },
             "params": {
                 "status": [{
@@ -119,7 +121,6 @@ class Deviceset():
                 }]
             }
         }
-        # print(play_status)
         return play_status
 
     # 添加上线的信息
@@ -128,10 +129,10 @@ class Deviceset():
             online_data = {
                 "topic": "cloud.online",
                 "version": "3.0",
-                "mid": f"{uuid.uuid1().hex}",
+                "mid": str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time()) + "mid")),
                 "request": {
                     "apiVer": "1.0.0",
-                    "timestamp": self.get_time_stamp(),
+                    "timestamp": int(time.time()),
                     "paramsSignBase64": "8b0NLQ0rJ1Vb/MpTZ9vXHLsRMCk="
                 },
                 "params": {
@@ -149,10 +150,10 @@ class Deviceset():
             online_data = {
                 "topic": "cloud.online",
                 "version": self.version,
-                "mid": f"{uuid.uuid1().hex}",
+                "mid": str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time()) + "mid")),
                 "request": {
                     "apiVer": "1.0.0",
-                    "timestamp": self.get_time_stamp(),
+                    "timestamp": int(time.time()),
                     "paramsSignBase64": "8b0NLQ0rJ1Vb/MpTZ9vXHLsRMCk="
                 },
                 "params": {
@@ -166,14 +167,35 @@ class Deviceset():
                     "sn": f"{self.sn}",
                 }
             }
+        elif self.devicetype == "xf__halfDuplex":
+            online_data = {
+                "topic": "cloud.online",
+                "version": self.version,
+                "mid": str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time()) + "mid")),
+                "request": {
+                    "apiVer": "1.0.0",
+                    "timestamp": int(time.time()),
+                    "paramsSignBase64": "BbheFT5fLRmkgtmXPTm/VCOiepg="
+                },
+                "params": {
+                    "category": "AC",
+                    "clientId": f"{self.clientid}",
+                    "id": f"{self.deviceId}",
+                    "ip": "127.0.0.1",
+                    "mac": "a0:68:1c:b9:d2:9e",
+                    "model": "172",
+                    "productId": "1580967876",
+                    "sn": f"{self.sn}",
+                }
+            }
         elif self.devicetype == "3308_halfDuplex":
             online_data = {
                 "topic": "cloud.online",
                 "version": self.version,
-                "mid": f"{uuid.uuid1().hex}",
+                "mid": str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time()) + "mid")),
                 "request": {
                     "apiVer": "1.0.0",
-                    "timestamp": f"{self.get_time_stamp()}"
+                    "timestamp": int(time.time())
                 },
                 "params": {
                     "category": "0xAC",
@@ -186,23 +208,24 @@ class Deviceset():
         else:
             online_data = {
                 "topic": "cloud.online",
-                "mid": f"{uuid.uuid1().hex}",
                 "version": self.version,
+                "mid": str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time()) + "mid")),
                 "request": {
                     "apiVer": "1.0.0",
-                    "timestamp": self.get_time_stamp(),
-
+                    "timestamp": int(time.time()),
+                    "paramsSignBase64": "8b0NLQ0rJ1Vb/MpTZ9vXHLsRMCk="
                 },
                 "params": {
-                    "id": "%s" % self.deviceId,
-                    "sn": "%s" % self.sn,
-                    "clientId": "%s" % self.clientid,
-                    "category": "0xAC",
-                    "magicCode": "TSETIA"
+                    "category": "AC",
+                    "clientId": f"{self.clientid}",
+                    "id": f"{self.deviceId}",
+                    "ip": "127.0.0.1",
+                    "mac": "f0:c9:d1:b5:f9:a7",
+                    "model": "172",
+                    "productId": "1596681815",
+                    "sn": f"{self.sn}",
                 }
             }
-
-        # self.headers.append(online_data)
         return online_data
 
     def content_data(self):
@@ -210,14 +233,14 @@ class Deviceset():
             content_data = {
                 "version": self.version,
                 "topic": "cloud.speech.trans",
-                "mid": "%s" % uuid.uuid1().hex,
+                "mid": str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time()) + "mid")),
                 "id": "%s" % self.deviceId,
                 "category": "AC",
                 "request": {
                     "apiVer": "1.0.0",
-                    "sessionId": "%s" % uuid.uuid1().hex,
-                    "recordId": "%s" % uuid.uuid1().hex,
-                    "isMore": False
+                    "sessionId": str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time()) + "sessionId")),
+                    "recordId": str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time()) + "recordId")),
+                    "isMore": True
                 },
                 "params": {
                     "audio": {
@@ -238,15 +261,17 @@ class Deviceset():
             content_data = {
                 "version": self.version,
                 "topic": "cloud.speech.trans",
-                "mid": uuid.uuid1().hex,
+                "mid": str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time()) + "mid")),
                 "id": "%s" % self.deviceId,
                 "sn": "%s" % self.sn,
                 "clientId": "%s" % self.clientid,
                 "category": "AC",
                 "request": {
                     "apiVer": "1.0.0",
-                    "sessionId": "%s" % uuid.uuid1().hex,
-                    "recordId": "%s" % uuid.uuid1().hex,
+                    "sessionId": str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time()) + "sessionId")),
+                    "recordId": str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time()) + "recordId")),
+                    # "sessionId": "0fc39a8e-beb2-11eb-9c77-9fbf258fc02bb",
+                    # "recordId": "0fc39a8e-beb2-11eb-9c77-9fbf258fc02bb",
                     "isMore": False
                 },
                 "params": {
@@ -268,12 +293,12 @@ class Deviceset():
         elif self.devicetype == "yuyintie_1":
             content_data = {
                 "topic": "cloud.speech.trans",
-                "mid": uuid.uuid1().hex,
+                "mid": str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time()) + "mid")),
                 "version": self.version,
                 "request": {
-                    "timestamp": self.get_time_stamp(),
-                    "sessionId": "%s" % uuid.uuid1().hex,
-                    "recordId": "%s" % uuid.uuid1().hex,
+                    "timestamp": int(time.time()),
+                    "sessionId": str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time()) + "sessionId")),
+                    "recordId": str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time()) + "recordId")),
                 },
                 "params": {
                     "audio": {
@@ -284,41 +309,50 @@ class Deviceset():
                     }
                 }
             }
-        elif self.devicetype == "xf":
+        elif self.devicetype == "xf__halfDuplex":
             content_data = {
+                "version": "3.0",
                 "topic": "cloud.speech.trans",
-                "mid": uuid.uuid1().hex,
-                "version": self.version,
+                "mid": str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time()) + "mid")),
+                "id": f"{self.deviceId}",
+                "sn": self.sn,
+                "clientId": "381f33d9-c25e-4d3e-a1cd-847000683ab3",
+                "category": "AC",
                 "request": {
-                    "timestamp": self.get_time_stamp(),
-                    "sessionId": "%s" % uuid.uuid1().hex,
-                    "recordId": "%s" % uuid.uuid1().hex,
+                    "apiVer": "1.0.0",
+                    "sessionId": str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time()) + "sessionId")),
+                    "recordId": str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time()) + "recordId")),
+                    "isMore": False
                 },
                 "params": {
                     "audio": {
+                        # "audioType": "opus-wb",  #真实设备是opus格式，需要向嵌入式了解该格式上传的逻辑
                         "audioType": "wav",
                         "sampleRate": 16000,
                         "channel": 1,
                         "sampleBytes": 2
                     },
-                    "fullDuplex": False,
+                    "ttsIsp": "dui-real-sound",
+                    "nluIsp": "xf-aiui",
                     "asrIsp": "xf-aiui",
+                    "serverVad": True,
                     "accent": "mandarin",
+                    "mixedResEnable": "0"
                 }
             }
         elif self.devicetype == "3308_halfDuplex":
             content_data = {
                 "version": self.version,
                 "topic": "cloud.speech.trans",
-                "mid": f"{uuid.uuid1().hex}",
+                "mid": str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time()) + "mid")),
                 "id": f"{self.deviceId}",
                 "sn": self.sn,
                 "clientId": f"{self.clientid}",
                 "category": "AC",
                 "request": {
                     "apiVer": "1.0.0",
-                    "sessionId": f"{uuid.uuid1().hex}",
-                    "recordId": f"{uuid.uuid1().hex}",
+                    "sessionId": str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time()) + "sessionId")),
+                    "recordId": str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time()) + "recordId")),
                     "isMore": False
                 },
                 "params": {
@@ -334,13 +368,13 @@ class Deviceset():
             content_data = {
                 "version": self.version,
                 "topic": "cloud.speech.trans",
-                "mid": "%s" % uuid.uuid1().hex,
+                "mid": str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time()) + "mid")),
                 "id": "%s" % self.deviceId,
                 "category": "AC",
                 "request": {
                     "apiVer": "1.0.0",
-                    "sessionId": "%s" % uuid.uuid1().hex,
-                    "recordId": "%s" % uuid.uuid1().hex,
+                    "sessionId": str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time()) + "sessionId")),
+                    "recordId": str(uuid.uuid5(uuid.NAMESPACE_URL, str(time.time()) + "recordId")),
                     "isMore": False
                 },
                 "params": {
@@ -359,7 +393,3 @@ class Deviceset():
                 }
             }
         return content_data
-
-if __name__ == '__main__':
-    a=Deviceset("328").content_data()
-    print(a)

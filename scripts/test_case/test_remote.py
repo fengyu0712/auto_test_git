@@ -44,7 +44,7 @@ class TestRemote:
         log.info("========%s开始执行跨机控制用例:========" % __class__.__name__)
 
     def teardown_class(cls):
-        Logger().info("========%s测试用例结束!========" % __class__.__name__)
+        Logger().info("========%s跨机控制测试用例结束!========" % __class__.__name__)
 
     @pytest.mark.parametrize("case", all_caseinfo)
     def test_remote(self, case):

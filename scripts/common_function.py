@@ -3,11 +3,14 @@
 # @Author : xx
 # @File : common_function.py 
 # @Software: PyCharm
+
 import threading
 import random
 import queue
 import allure
 import jsonpath
+from apscheduler.schedulers.blocking import BlockingScheduler
+
 from api.meiju_api import Meijuapi
 from scripts import common_assert
 from api.webscoket_api import AiCloud
@@ -17,7 +20,6 @@ from api.orionapi import OrionApi
 import datetime
 import re
 import os
-from scripts.common_assert import assert_url_status_code
 from scripts.init_env import current_env
 from tools.file_tool import FileTool
 from tools.mylog import Logger
@@ -30,13 +32,34 @@ device_user_list = config.device_user_list
 all_caselist = list()
 nowdate = datetime.datetime.now().strftime('%Y-%m-%d')
 
+run_case_nums = {}
+for devicetype in config.main_device_list:
+    run_case_nums[devicetype] = 0
+case_num = 143
+
+
+def job():
+    test_progress = f"================================\n********************************\n"
+    for key in run_case_nums.keys():
+        test_progress += f"执行进度：入口设备{key},\n已执行用例数量：【{run_case_nums[key]}】,\n剩余未执行数量：【{case_num - run_case_nums[key]}】\n"
+    test_progress += f"********************************\n================================"
+    print(test_progress)
+
+
+# scheduler = BlockingScheduler()
+# scheduler.add_job(job, 'interval', seconds=10)
+# scheduler.start()
+
 
 class Commonfunction():
     def runcase(self, caselist, devicetype, remote_device=None):
         global all_caselist
+        case_num = len(caselist) + 1
         log.info(f"开始{devicetype}测试,线程id:{threading.currentThread().ident}")
-        global device_user_list
+        strt_time = time.time()
+        global device_user_list, run_case_nums
         for case in caselist:
+            run_case_nums[devicetype] += 1
             case_category = case.get('case_category')
             case["devicetype"] = devicetype
             case["remote_device"] = remote_device
@@ -83,16 +106,13 @@ class Commonfunction():
                                 current_step = step_list[i]  # 当前测试步骤
                                 if i != step_len - 1:
                                     params_value = current_step.get('params')
+
                                     if "clock_time" in params_value:
                                         params_value = clock_time.set_clock(params_value)
                                         print(params_value)
                                     if devicetype == "yinxiang":
-                                        if "device_status" in str(case):  # 需要获取设备状态时需要等待
-                                            time.sleep(2)
                                         result = OrionApi(params_value).orion_post()
                                     elif devicetype == "meiju":
-                                        if "device_status" in str(case):  # 需要获取设备状态时需要等待
-                                            time.sleep(2)
                                         result = Meijuapi().post(params_value)
                                     else:
                                         log.info(f"当前测试步骤【{current_step}】")
@@ -100,9 +120,6 @@ class Commonfunction():
                                             result = aicloud_ws.send_data(params_value)
                                         except Exception as e:
                                             result = {"response_error": e}
-                                        else:
-                                            # 校验url是否可以正常访问
-                                            assert_url_status_code(result)
                                     if result == None: result = {"error": f"{devicetype}接口超时"}
                                     current_step['response'] = result
 
@@ -114,9 +131,11 @@ class Commonfunction():
                             release_devices(devicetype, case_lock_list)
                             raise e
                     else:
-                        log.info(f"当前{devicetype}入口执行时，设备{case_lock_list}正在使用中")
+                        log.info(f"当前{devicetype}入口执行用例{case_name}时，设备{case_lock_list}正在使用中")
                         time.sleep(1)
-
+            if time.time() - strt_time > 120 or run_case_nums[devicetype] == case_num:
+                job()
+                strt_time = time.time()
         log.info(f"{devicetype}入口测试用例已经运行完成")
         all_caselist.append(caselist)
 
@@ -141,27 +160,47 @@ class Commonfunction():
                     try:
                         # 如果是小美音箱，对public技能进行特殊校验
                         publicskill = ["Public", "播放控制", "音量调节", "闹钟技能"]
-                        yinxiang_assert = {"nlg": {'status': 500,
-                                                   'nlu': '{"code":"200","data":{"nlu":{"classifier":"publicDomain"}},"message":"success"}'}}
-                        meiju_assert = {"nlg": {'isMideaDomain': False, 'errorCode': "0"}}
+                        yinxiang_assert = {"nlg": {
+                            'nlu': '{"code":"200","data":{"nlu":{"classifier":"publicDomain"}}'}}
+                        meiju_assert = {"nlg": {'code': 200, 'isMideaDomain': False, 'errorCode': "0"}}
                         if case_category in publicskill and device_type == "yinxiang":
                             current_step['params'] = yinxiang_assert
-                        if case_category in publicskill and device_type == "meiju":
+                        elif case_category in publicskill and device_type == "meiju":
                             if case_category == "音量调节":
                                 current_step['params'] = {"nlg": {'text': "抱歉", 'errorCode': "0"}}
                             else:
                                 current_step['params'] = meiju_assert
                         common_assert.common_assert(device_type, response, current_step.get('params'))
-                        # r.write_onedata(w_tool, current_step.get("x_y"), "执行通过")
                     except Exception as e:
-                        # r.write_onedata(w_tool, current_step.get("x_y"), "执行失败! 原因:{}".format(e))
                         result = "执行失败! 原因:{}".format(e)
                         log.error("执行失败!原因:{}".format(e))
+                        if "ws_error" in result:
+                            error_type = "链接异常"
+                        elif "asr" in result:
+                            error_type = "ASR错误"
+                        elif "nlg" in result:
+                            error_type = "NLG错误"
+                        elif "order_config" in result:
+                            error_type = "本机order_config异常"
+                        elif "闹钟" in result:
+                            error_type = "闹钟下发异常"
+                        elif "assert_media" in result:
+                            error_type = "NLG错误"
+                        elif "返回url为" in result:
+                            error_type = "媒体技能返回异常"
+                        elif "assert_url_status_code" in result:
+                            error_type = "TTS或者媒体响应异常"
+                        elif "assert_device_status" or "device_status错误" in result:
+                            error_type = "设备状态校验错误"
+                        else:
+                            print(f"+++++++++++++{result}")
+                            error_type = "链接异常"
                         raise e
                     else:
+                        error_type = "执行通过"
                         result = "执行通过"
-
                     finally:
+                        allure.dynamic.tag(error_type)
                         current_step["result"] = result
                         r.write_onlydata_new(w, index + i, 8, result, result_file, sheetname=sheetname)
                 else:
@@ -178,12 +217,13 @@ class Commonfunction():
                     except Exception as e:
                         result = "执行失败! 原因:{}".format(e)
                         log.error("执行失败!原因:{}".format(e))
+                        error_type = "设备状态获取异常"
+                        allure.dynamic.tag(error_type)
                         raise e
                     else:
                         result = "控制完成"
-
                     finally:
-                        print(result)
+                        allure.attach(str(response), f"step{i + 1}_respone", allure.attachment_type.TEXT)
                         current_step["result"] = result
                         r.write_onlydata_new(w, index + i, 8, result, result_file, sheetname=sheetname)
 
@@ -193,7 +233,7 @@ class Commonfunction():
         i = 0
         apiobj = Api()
         log.info('开始获取设备状态。。。。。。{}'.format(datetime.datetime.now()))
-        count = 5
+        count = 1
         while i < count:
             time.sleep(1)
             jsonvalue = apiobj.post(mid)
@@ -220,8 +260,8 @@ def cost_time(func):
 def run_main_case():
     ts = []
     main_devices = config.main_device_list
-    # case_path = r"F:\git\Midea\auto_test\data\data_case.csv"
-    case_path = r"./data/data_case.csv"
+    print(main_devices)
+    case_path = os.sep.join([os.path.dirname(os.path.dirname(__file__)), "data", "data_case.csv"])
 
     for i in range(len(main_devices)):
         device_type = main_devices[i]
@@ -253,7 +293,8 @@ def run_remote_devices(device_type, q):
             print(f"{device_type}控制设备{remote_device}")
             remote_devices_list.remove(remote_device)
             q.put(remote_devices_list)
-            case_path = os.path.join(r"./data/remote", f"{remote_device}.csv")
+            case_path = os.sep.join(
+                [os.path.dirname(os.path.dirname(__file__)), "data", "remote", f"{remote_device}.csv"])
             # 读取excel的内容信息
             f = FileTool()
             cav_data = f.read_csv(case_path)
