@@ -79,12 +79,10 @@ class Commonfunction():
                         case_lock_list = list(device_user_list.keys())
                     else:
                         case_lock_list = re.split(",", case_lock)
-                    for i in range(0, len(case_lock_list)):
-                        device_user_list[case_lock_list[i]] = 1
                 while True:
                     is_lock = 0
-                    for key in device_user_list.keys():
-                        if case_lock_list[key] == 1:
+                    for key in case_lock_list:
+                        if device_user_list[key] == 1:
                             is_lock = 1
                             break
                     if not is_lock:
@@ -283,7 +281,7 @@ def run_main_case():
         ts[i].join()
     resultfile = os.path.join(os.path.join(config.base_path, "result"),
                               f"{current_env}_MainCase_TestResult_{nowdate}.xls")
-    write_result(resultfile)
+    # write_result(resultfile)
 
 
 def run_remote_devices(device_type, q):
