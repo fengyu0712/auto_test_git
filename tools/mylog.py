@@ -13,10 +13,13 @@ class Logger(logging.Logger):
         # 日志文件名
         if filename is None:
             nowtimeinfo = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-            filename = base_path + os.sep + "log" + os.sep
+            filename = os.path.join(base_path, "log")
         self.filename = filename
+        if not os.path.exists(self.filename):
+            os.makedirs(self.filename)
         now = time.strftime('%Y-%m-%d')
         self.filename = os.path.join(self.filename, now + ".log")
+
         # 创建一个handler，用于写入日志文件 (每天生成1个，保留30天的日志)
         self.fh = logging.handlers.TimedRotatingFileHandler(self.filename, 'D', 1, 30, encoding='utf8')
         self.fh.setLevel(logging.DEBUG)
